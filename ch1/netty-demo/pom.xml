@@ -11,7 +11,14 @@
   <url>http://maven.apache.org</url>
 
   <properties>
+    <!-- java版本 -->
+    <java.version>${java.version}</java.version>
+    <!-- jdk 版本 -->
+    <jdk.version>${java.version}</jdk.version>
+    <!-- 目标源码 -->
+    <maven.compiler.source>${java.version}</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <java.version>21</java.version>
   </properties>
 
   <dependencies>
@@ -48,4 +55,16 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>9</source>
+          <target>9</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
