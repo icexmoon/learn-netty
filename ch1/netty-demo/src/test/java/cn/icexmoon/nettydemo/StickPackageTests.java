@@ -28,7 +28,7 @@ public class StickPackageTests {
     }
 
     private static List<ByteBuffer> dealStickPackage(List<ByteBuffer> sourceBuffers) {
-        List<ByteBuffer> targetBuffers = new ArrayList<ByteBuffer>();
+        List<ByteBuffer> targetBuffers = new ArrayList<>();
         for (ByteBuffer buffer : sourceBuffers) {
             dealStickPackage(targetBuffers, buffer);
         }
