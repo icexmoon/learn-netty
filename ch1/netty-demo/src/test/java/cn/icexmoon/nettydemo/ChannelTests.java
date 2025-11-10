@@ -18,7 +18,7 @@ import java.nio.channels.FileChannel;
 public class ChannelTests {
     @Test
     public void testChannel() throws Exception {
-        final String filePath = "D:\\workspace\\learn-netty\\ch1\\netty-demo\\src\\test\\resources\\test.txt";
+        final String filePath = "D:\\workspace\\learn-netty\\ch1\\netty-demo\\src\\test\\resources\\source.txt";
         // 创建一个从文件读取数据的通道
         try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
             FileChannel channel = fileInputStream.getChannel();
