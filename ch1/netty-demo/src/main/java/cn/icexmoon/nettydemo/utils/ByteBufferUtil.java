@@ -1,4 +1,4 @@
-package cn.icexmoon.nettydemo;
+package cn.icexmoon.nettydemo.utils;
 
 import io.netty.util.internal.StringUtil;
 
