@@ -1,100 +1,72 @@
 package cn.icexmoon.nettydemo;
 
+import cn.icexmoon.nettydemo.utils.ClientTestUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * @ClassName NoBlockWebTests
- * @Description 非阻塞式的网络编程测试用例
+ * @ClassName NoBlockWebTest2
+ * @Description
  * @Author icexmoon@qq.com
- * @Date 2025/11/10 下午3:13
+ * @Date 2025/12/21 上午11:20
  * @Version 1.0
  */
 @Slf4j
-public class NoBlockWebTests {
-    private static final int PORT = 8080;
+public class NoBlockWeb2Tests {
 
+    private static final int SERVER_PORT = 8080;
+
+    /**
+     * 以非阻塞的方式创建一个 NIO 服务端
+     */
     @Test
-    public void testServer() throws IOException, InterruptedException {
-        // 非阻塞式的服务端
+    public void testServer() throws IOException {
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        serverSocketChannel.bind(new InetSocketAddress(SERVER_PORT));
+        // 使用非阻塞模式
         serverSocketChannel.configureBlocking(false);
-        serverSocketChannel.bind(new InetSocketAddress(PORT));
-        // 使用 Selector 实现多路复用
-        Selector selector = Selector.open();
-        // 为 channel 绑定 accept 事件
-        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+        // 持有与客户端连接通道的容器
+        List<SocketChannel> socketChannels = new ArrayList<>();
+        // 用于客户端打印的缓存，因为是单线程，可以复用
+        ByteBuffer msgReadBuffer = ByteBuffer.allocate(20);
         while (true) {
-            // 获取监听的事件
-            int selected = selector.select();
-            if (selected == 0) {
-                log.info("没有任何事件触发");
-                Thread.sleep(1000);
-                continue;
+            // 尝试建立连接
+            SocketChannel socketChannel = serverSocketChannel.accept();
+            // 如果获取到连接，返回值是非 null
+            if (socketChannel != null) {
+                log.info("与客户端建立连接 {}", socketChannel);
+                // 使用非阻塞模式
+                socketChannel.configureBlocking(false);
+                // 添加到连接容器
+                socketChannels.add(socketChannel);
             }
-            for (SelectionKey key : selector.selectedKeys()) {
-                if (key.isAcceptable()) {
-                    // 有 accept 事件发生，建立连接
-                    log.info("有连接请求");
-                    // 获取 channel
-                    ServerSocketChannel channel = (ServerSocketChannel) key.channel();
-                    // 获取连接
-                    SocketChannel accept = channel.accept();
-                    log.info("已连接：{}", accept);
-                    accept.configureBlocking(false);
-                    accept.register(selector, SelectionKey.OP_READ);
-                    // 处理完事件后，从 selectedKeys 中移除
-                    selector.selectedKeys().remove(key);
-                } else if (key.isReadable()) {
-                    // 有 read 事件发生，读取数据并打印
-                    log.info("有数据可读");
-                    SocketChannel channel = (SocketChannel) key.channel();
-                    ByteBuffer buffer = ByteBuffer.allocate(1024);
-                    int read = channel.read(buffer);
-                    if (read == -1){
-                        // 取消通道注册事件
-                        key.cancel();
-                        channel.close();
-                        log.info("已关闭：{}", channel);
-                        continue;
-                    }
-                    while (read != -1) {
-                        buffer.flip();
-                        log.info("{}", StandardCharsets.UTF_8.decode(buffer));
-                        buffer.clear();
-                        read = channel.read(buffer);
-                    }
-                    selector.selectedKeys().remove(key);
+            // 遍历连接容器，如果有消息，打印
+            for (SocketChannel ss : socketChannels) {
+                int read = ss.read(msgReadBuffer);
+                // 非阻塞模式下，没客户端没有发送消息，返回 0
+                if (read > 0) {
+                    msgReadBuffer.flip();
+                    String msg = StandardCharsets.UTF_8.decode(msgReadBuffer).toString();
+                    log.info("接收到客户端消息:{}, from:{}", msg, ss);
+                    // 清空缓冲，等待下一次写入
+                    msgReadBuffer.clear();
                 }
             }
-            Thread.sleep(1000);
         }
     }
 
     @Test
-    public void testClient() throws IOException {
-        SocketChannel socketChannel = SocketChannel.open();
-        socketChannel.connect(new InetSocketAddress("localhost", PORT));
-        socketChannel.write(StandardCharsets.UTF_8.encode("hello"));
-        socketChannel.close();
-    }
-
-    @Test
-    public void testClient2() throws IOException {
-        try(Socket socket = new Socket("localhost", PORT)){
-            System.out.println(socket);
-            socket.getOutputStream().write("hello".getBytes());
-            System.in.read();
-        }
+    public void testClient() {
+        List<String> messages = List.of("hello", "hi", "你好");
+        ClientTestUtil.sendMsgToServerByMultiClients("localhost", SERVER_PORT, messages);
     }
 }
