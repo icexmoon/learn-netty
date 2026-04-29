@@ -4,6 +4,7 @@
     <groupId>cn.icexmoon.netty.time</groupId>
     <artifactId>time4</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <description>使用解码器解决黏包和半包问题</description>
     <packaging>pom</packaging>
     <name>time4</name>
     <url>http://maven.apache.org</url>
