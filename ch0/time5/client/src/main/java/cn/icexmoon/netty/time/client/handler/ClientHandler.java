@@ -19,13 +19,12 @@ import java.nio.charset.StandardCharsets;
 public class ClientHandler extends ChannelInboundHandlerAdapter {
     private int receiveCounter = 0;
     private int sendCounter = 0;
-
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         // 连接建立后发送时间请求
         for (int i = 0; i < 100; i++) {
             String request = "QUERY TIME ORDER";
-            request += System.getProperty("line.separator");
+            request += "$_";
             byte[] bytes = request.getBytes(StandardCharsets.UTF_8);
             ByteBuf buffer = Unpooled.buffer(bytes.length);
             buffer.writeBytes(bytes);

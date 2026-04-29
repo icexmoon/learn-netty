@@ -29,7 +29,7 @@ public class ChildChannelHandler extends ChannelInboundHandlerAdapter {
         counter++;
         log.info("The time server send:{}, receive times:{}", currentTime, counter);
         // 每条消息后追加换行符
-        currentTime += System.getProperty("line.separator");
+        currentTime += "$_";
         ByteBuf resp = Unpooled.copiedBuffer(currentTime.getBytes());
         ctx.writeAndFlush(resp);
     }
