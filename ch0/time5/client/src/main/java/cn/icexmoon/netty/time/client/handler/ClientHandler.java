@@ -24,7 +24,9 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         // 连接建立后发送时间请求
         for (int i = 0; i < 100; i++) {
-            byte[] bytes = "QUERY TIME ORDER".getBytes(StandardCharsets.UTF_8);
+            String request = "QUERY TIME ORDER";
+            request += System.getProperty("line.separator");
+            byte[] bytes = request.getBytes(StandardCharsets.UTF_8);
             ByteBuf buffer = Unpooled.buffer(bytes.length);
             buffer.writeBytes(bytes);
             sendCounter++;
@@ -36,10 +38,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         receiveCounter++;
-        ByteBuf byteBuf = (ByteBuf) msg;
-        byte[] bytes = new byte[byteBuf.readableBytes()];
-        byteBuf.readBytes(bytes);
-        String body = new String(bytes, StandardCharsets.UTF_8);
+        String body = (String) msg;
         log.info("Now time is:{}, receive times:{}", body, receiveCounter);
     }
 }

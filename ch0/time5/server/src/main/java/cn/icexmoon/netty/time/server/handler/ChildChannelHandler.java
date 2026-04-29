@@ -17,18 +17,19 @@ import java.nio.charset.StandardCharsets;
  */
 @Slf4j
 public class ChildChannelHandler extends ChannelInboundHandlerAdapter {
-    private int counter  = 0;
+    private int counter = 0;
+
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        ByteBuf buf = (ByteBuf) msg;
-        byte[] req = new byte[buf.readableBytes()];
-        buf.readBytes(req);
-        String body = new String(req, StandardCharsets.UTF_8);
+        // 因为添加了解码器，这里直接可以读取到 String
+        String body = (String) msg;
         log.info("The time server receive order:{}", body);
         String currentTime = "QUERY TIME ORDER".equalsIgnoreCase(body) ?
                 new java.util.Date(System.currentTimeMillis()).toString() : "BAD ORDER";
         counter++;
         log.info("The time server send:{}, receive times:{}", currentTime, counter);
+        // 每条消息后追加换行符
+        currentTime += System.getProperty("line.separator");
         ByteBuf resp = Unpooled.copiedBuffer(currentTime.getBytes());
         ctx.writeAndFlush(resp);
     }
