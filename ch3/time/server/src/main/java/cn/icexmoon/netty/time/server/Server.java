@@ -10,6 +10,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
@@ -35,8 +37,13 @@ public class Server {
                         @Override
                         protected void initChannel(NioSocketChannel ch) throws Exception {
                             // 使用分隔符解码器解决黏包问题
-                            ByteBuf delimiter = Unpooled.wrappedBuffer("$_".getBytes());
-                            ch.pipeline().addLast(new DelimiterBasedFrameDecoder(1024, delimiter));
+//                            ByteBuf delimiter = Unpooled.wrappedBuffer("$_".getBytes());
+//                            ch.pipeline().addLast(new DelimiterBasedFrameDecoder(1024, delimiter));
+                            // 使用换行解码器解决黏包问题
+//                            ch.pipeline().addLast(new LineBasedFrameDecoder(1024));
+                            // 使用长度解码器解决黏包问题
+                            ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(65536, 0, 4, 0, 4));
+                            ch.pipeline().addLast(new LengthFieldPrepender(4));
                             ch.pipeline().addLast(new StringDecoder());
                             ch.pipeline().addLast(new ChildChannelHandler());
                         }

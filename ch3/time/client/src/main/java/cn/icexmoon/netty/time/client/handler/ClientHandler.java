@@ -24,7 +24,9 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
         // 连接建立后发送时间请求
         for (int i = 0; i < 100; i++) {
             String request = "QUERY TIME ORDER";
-            request += "$_";
+//            request += "$_";
+            // 追加系统换行符
+//            request += "\r\n";
             byte[] bytes = request.getBytes(StandardCharsets.UTF_8);
             ByteBuf buffer = Unpooled.buffer(bytes.length);
             buffer.writeBytes(bytes);
