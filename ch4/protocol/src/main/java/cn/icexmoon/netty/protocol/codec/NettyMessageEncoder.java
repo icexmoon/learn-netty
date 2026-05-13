@@ -47,5 +47,8 @@ public class NettyMessageEncoder extends MessageToMessageEncoder<NettyMessage> {
             sendBuf.writeInt(0);
         }
         sendBuf.setInt(lengthIndex, sendBuf.readableBytes());
+        
+        // 将编码后的 ByteBuf 添加到输出列表
+        list.add(sendBuf);
     }
 }
