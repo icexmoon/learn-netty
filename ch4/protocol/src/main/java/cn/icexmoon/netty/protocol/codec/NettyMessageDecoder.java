@@ -25,9 +25,12 @@ public class NettyMessageDecoder extends LengthFieldBasedFrameDecoder {
     private final MarshallingDecoder marshallingDecoder = new MarshallingDecoder();
     
     public NettyMessageDecoder(int maxFrameLength, int lengthFieldOffset, int lengthFieldLength) {
-        // lengthFieldOffset=4, lengthFieldLength=4, lengthAdjustment=0, initialBytesToStrip=0
-        // initialBytesToStrip=0 表示不跳过任何字节，保留完整的帧数据（包括crcCode和length）
-        super(maxFrameLength, lengthFieldOffset, lengthFieldLength, 0, 0);
+        // lengthFieldOffset=4 (crcCode 后面), lengthFieldLength=4
+        // lengthAdjustment=-8: 因为 length 字段表示的是整个消息的总长度（包括 crcCode 和 length 本身）
+        //   LengthFieldBasedFrameDecoder 计算的帧长度 = lengthFieldOffset + lengthFieldLength + length + lengthAdjustment
+        //   = 4 + 4 + length + (-8) = length，正好是整个消息的长度
+        // initialBytesToStrip=0: 不跳过任何字节，保留完整的帧数据
+        super(maxFrameLength, lengthFieldOffset, lengthFieldLength, -8, 0);
     }
 
     /**
@@ -40,12 +43,17 @@ public class NettyMessageDecoder extends LengthFieldBasedFrameDecoder {
      */
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+        log.debug("NettyMessageDecoder.decode 被调用, readableBytes: {}", in.readableBytes());
+        
         // 调用父类方法处理粘包/拆包，获取完整的帧数据
         ByteBuf frame = (ByteBuf) super.decode(ctx, in);
         
         if (frame == null) {
+            log.debug("父类 decode 返回 null，可能是数据不完整");
             return null;
         }
+        
+        log.debug("父类 decode 成功，frame readableBytes: {}", frame.readableBytes());
         
         try {
             NettyMessage message = new NettyMessage();
@@ -61,6 +69,14 @@ public class NettyMessageDecoder extends LengthFieldBasedFrameDecoder {
             // 2. 读取 length (4字节)
             int length = frame.readInt();
             header.setLength(length);
+            
+            // 验证长度字段：length 应该等于整个帧的长度
+            if (length != frame.readableBytes() + 8) { // +8 是因为已经读取了 crcCode(4) + length(4)
+                log.warn("Length field mismatch, expected: {}, actual remaining: {}", 
+                        length, frame.readableBytes() + 8);
+            } else {
+                log.debug("Length field verified: {}", length);
+            }
             
             // 3. 读取 sessionID (8字节)
             long sessionID = frame.readLong();
