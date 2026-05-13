@@ -31,5 +31,5 @@
     <logger name="io.netty" level="INFO" />
     
     <!-- 项目包日志级别 -->
-    <logger name="cn.icexmoon.netty.protocol" level="DEBUG" />
+    <logger name="cn.icexmoon.netty.protocol" level="TRACE" />
 </configuration>
