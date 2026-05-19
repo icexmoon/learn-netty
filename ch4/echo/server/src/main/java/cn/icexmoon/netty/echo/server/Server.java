@@ -1,5 +1,7 @@
 package cn.icexmoon.netty.echo.server;
 
+import cn.icexmoon.netty.echo.server.handler.InExceptionHandler;
+import cn.icexmoon.netty.echo.server.handler.OutExceptionHandler;
 import cn.icexmoon.netty.echo.server.handler.ServerHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -35,7 +37,9 @@ public class Server {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
+                            ch.pipeline().addLast(new OutExceptionHandler());
                             ch.pipeline().addLast(serverHandler);
+                            ch.pipeline().addLast(new InExceptionHandler());
                         }
                     });
             ChannelFuture channelFuture = serverBootstrap.bind(PORT).sync();
